@@ -43,6 +43,7 @@ public:
     
     void update_q(int x, int y);
     void initialize_q();
+    void initialize_visited();
     double q_equation(double previous, double reward, double max_q);
     double max_q(q_learner);
     bool stuck();
@@ -114,7 +115,15 @@ void grid::initialize_q(){
 }
 
 
-
+// Initializes each spot as not visited
+void grid::initialize_visited() {
+    for(int i = 0; i < m; ++i) {
+        for(int j = 0; j < n; ++j) {
+            visited[i][j] = false; 
+        }
+    }
+    
+}
 
 // asigns rewards
 
@@ -187,9 +196,9 @@ int grid::run_q(){
  
     while (end_flag) {
         update_q(agent_location[0],agent_location[1]);
+        visited[agent_location[0]][agent_location[1]] = true;
 
-
-        if (JSRand<.01){
+        if (JSRand<.1){
              int rand_action = rand()%4;
             switch (rand_action){
                 case 0:
@@ -235,7 +244,11 @@ int grid::run_q(){
         }
 
 
-       
+        if(stuck() == true) {
+            num_steps = -1;
+            break;
+        }
+        
      }
 
     return num_steps;
@@ -257,9 +270,45 @@ bool grid::initialize(){
     }
 }
 
-// Test D
+bool grid::stuck(){
+    bool up, down, left, right;
+
+    if(agent_location[0] - 1 < 0)
+        up = true;
+    else if(visited[agent_location[0]-1][agent_location[1]] == true)
+        up = true;
+    else
+        up = false;
+
+    if(agent_location[0] + 1 >= m)
+        down = true;
+    else if(visited[agent_location[0]+1][agent_location[1]] == true)
+        down = true;
+    else
+        down = false;
+
+    if(agent_location[1] - 1 < 0)
+        left = true;
+    else if(visited[agent_location[0]][agent_location[1]-1] == true)
+        left = true;
+    else
+        left = false;
+
+
+    if(agent_location[1] + 1 >= n)
+        right = true;
+    else if(visited[agent_location[0]][agent_location[1]+1] == true)
+        right = true;
+    else
+        right = false;
+
+
+    return (up && down && right && left);
+
+
+}
+// test D
 void grid::test_d(){
-    cout<< "Test D" << endl;
     initialize();
     initialize_q();
     run_q();
@@ -281,7 +330,6 @@ void grid::test_d(){
 
 // test E
 void grid::test_e(){
-    cout<< "Test E" << endl;
     initialize();
     initialize_q();
     
@@ -318,7 +366,6 @@ void grid::test_e(){
 
 // Test F
 void grid::test_f(){
-    cout<< "Test F" << endl;
 
     initialize();
     initialize_q();
@@ -328,7 +375,7 @@ void grid::test_f(){
     initial_state[1] = agent_location[1];
     print_grid();
     for(int i = 0; i < 1000; ++i) {
-
+        initialize_visited();
         int steps = run_q();
         if(steps == -1){
             i--;
@@ -360,6 +407,8 @@ bool grid::move(char direction){
         case 'w':
             if(agent_location[0]-1 < 0) 
                 return false;
+            else if(visited[agent_location[0]-1][agent_location[1]] == true)
+                return false;
             else {
                 agent_location[0] = agent_location[0]-1;
                 return true;
@@ -368,6 +417,8 @@ bool grid::move(char direction){
         case 'a':
             if(agent_location[1]-1 < 0) 
                 return false;
+            else if(visited[agent_location[0]][agent_location[1]-1] == true)
+                return false;
             else{
                 agent_location[1] = agent_location[1]-1;
             }
@@ -375,12 +426,16 @@ bool grid::move(char direction){
         case 's':
             if(agent_location[0]+1 >= m) 
                 return false;
+            else if(visited[agent_location[0]+1][agent_location[1]] == true)
+                return false;
             else{
                 agent_location[0] = agent_location[0]+1;
             }
         break;
         case 'd':
             if(agent_location[1]+1 >= n) 
+                return false;
+            else if(visited[agent_location[0]][agent_location[1]+1] == true)
                 return false;
             else{
                 agent_location[1] = agent_location[1]+1;
@@ -429,8 +484,10 @@ int main() {
     grid my_grid(m,n);
     
     my_grid.test_d();
-    my_grid.test_e();
+    //my_grid.test_e();
     my_grid.test_f();
+    //my_grid.print_q();
+
     return 0;
 }
 
